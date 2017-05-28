@@ -1,57 +1,30 @@
 # Log analyzer for nginx.
-シェルスクリプトでnginxのログ解析をしてみます。  
+nginxのログ解析をするシェルスクリプトです。  
 
-## chkhttp
-[Let's Encryptでhttps対応したついでにHTTP/2対応もした](https://github.com/Takeru-chan/webserver)ので、その効果測定をしてみます。  
-ファイルの読み込み回数を抑えてwhileループを回したchkhttp2.shよりも、単純に複数回ファイルを読んだchkhttp.shのほうが断然速かった。  
+毎晩ログローテートが終わった頃にcronでこのスクリプトを動かすと解析結果をまとめたhtmlファイルが生成されます。
+毎朝この結果を眺めて、怪しいアクセスがあったらすぐに対処できるようにしています。
 
-```
-$ time ./chkhttp2.sh 
-Total access: 698
-HTTP/2 rate : 28.2%
+## 動作前提
+- nginxのログフォーマットはapacheに準拠
+- 前日のアクセスログが/var/log/nginx/access.log.1.gzにある
+- 解析結果のhtmlファイルのドキュメントルートが/usr/local/www/search
 
-real0m0.487s
-user0m0.056s
-sys0m0.431s
-$ time ./chkhttp.sh 
-Total access: 698
-HTTP/2 rate : 28.2%
-
-real0m0.019s
-user0m0.015s
-sys0m0.011s
-$ time ./chkhttp2.sh 
-Total access: 698
-HTTP/2 rate : 28.2%
-
-real0m0.319s
-user0m0.024s
-sys0m0.295s
-$ time ./chkhttp.sh 
-Total access: 698
-HTTP/2 rate : 28.2%
-
-real0m0.031s
-user0m0.021s
-sys0m0.024s
-```
-
-ちなみにwhile readのくだりはcatの結果をパイプで渡すとサブプロセスが生成されるのでdone以降にシェル変数の内容が渡されません。
-
-## chkaccess
-アクセスログから不要なものを削除して見やすく。  
-
-bot,spider,crawlerを削除するとともに、WordPressの自動更新ログも削除。
-ログロール時の行も削除して、ログを整理。
-
-- ドメイン
-- IPアドレス
-- アクセス日時
-- リファラ
-- リクエストファイル名
-- ユーザーエージェント
-
-## chkpvuu
-有効なログからドメインごとにページビューとユニークユーザー数を取り出す。  
-
-ドメイン:PV(UU)  
+## 解析内容
+<dl>
+<dt>サマリー</dt>
+<dd>ボットやスパイダー、クローラーのアクセスを除いたものを有効アクセスとして、ドメインごとのアクセス数とユニークユーザー数を集計。
+有効アクセス中のHTTP/2アクセス率を算出。
+時間帯ごとのアクセス数を棒グラフで集計。</dd>
+<dt>検索結果</dt>
+<dd>リファラにsearchが含まれるアクセスを検索エンジンからのアクセスとして、被アクセスアドレスとアクセス時刻、IPアドレスを集計。</dd>
+<dt>クローラーアクセス状況</dt>
+<dd>ボットやスパイダー、クローラーのアクセスを集計してユーザーエージェントを表示。</dd>
+<dt>POST,HEADリクエスト</dt>
+<dd>GETリクエスト以外のアクセスを集計。</dd>
+<dt>WordPressファイルアクセス</dt>
+<dd>wp-login.phpおよびxmlrpcファイルへのアクセスを記録し、HTTPステータスとIPアドレスを集計。</dd>
+<dt>非公開ドメインアクセスリスト</dt>
+<dd>Webサーバーで公開設定していないドメインやIPアドレスによるアクセスを記録し、IPアドレスとHTTPステータス、被アクセスアドレスとユーザーエージェントを集計。</dd>
+<dt>HTTPステータス</dt>
+<dd>200以外のステータスを返したIPアドレスを集計</dd>
+</dl>
