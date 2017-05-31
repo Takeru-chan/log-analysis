@@ -32,10 +32,10 @@ TOTAL=`wc -l $VALIDLOG`
 <$VALIDLOG cut -d ':' -f 2 | uniq -c | \
   awk -v total="${TOTAL}" '{print $2"時：";for(i=1;i<=$1*500/total;i++){print "*"};print "<br>"}' >> $FILE
 echo "</p>" >> $FILE
-echo "<h2>検索結果</h2><div class='scr'><ol>" >> $FILE
-<$VALIDLOG awk -F\" '$4 ~ /search/' | \
-  awk '{printf("<li><a href=\"%s\" target=\"_blank\">%s</a><br>%s %s %s</li>",$12,$8,$5,$6,$2)}' >> $FILE
-echo "</ol></div><h2>クローラーアクセス状況</h2><div class='scr'><ul>" >> $FILE
+echo "<h2>有効アクセスリスト</h2><div class='scr'><ul>" >> $FILE
+<$VALIDLOG awk -F\" '{split($1,ARRAY," ");printf("\042%s\042%s\042%s\042\n",ARRAY[2],$4,$6)}' | sort | uniq -c | \
+  awk -F\" '{split($1,ARRAY," ");IP[$2]=IP[$2]"<br>"ARRAY[1]" "$3" "$4}END{for (key in IP){printf("<li>%s %s</li>",key,IP[key])}}' >> $FILE
+echo "</ul></div><h2>クローラーアクセス状況</h2><div class='scr'><ul>" >> $FILE
 <$INVALIDLOG cut -d '"' -f 6 | sort | uniq -c | sort -r | sed 's/\(.*\)/\<li\>\1\<\/li\>/' >> $FILE
 echo "</ul></div><h2>POST,HEADリクエスト</h2><div class='scr'><ol>" >> $FILE
 <$TMPLOG awk -F\" '($2 !~ /GET/){printf("<li>%s %s<br>%s<br>%s<br>%s</li>",$2,$3,$1,$4,$6)}' >> $FILE
