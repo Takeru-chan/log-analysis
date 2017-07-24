@@ -15,17 +15,19 @@ for($i=1;$i<=$eol;$i++) {
 }
 echo "<div style='width:90%; margin:auto; padding:0.5em 1em; height:40em; border:solid 1px #000; overflow-y:auto;'><ul>";
 foreach($list as $address => $value) {
-  $array = explode("@@@",$value);
-  $uniq = array_count_values($array);
-  $string = "";
-  foreach($uniq as $key => $data) {
-    if($key != "") {
-      $string = $string."[".$data."] ".$key."<br>";
+  if(strpos($value,'bot') == false and strpos($value,'spider') == false){
+    $array = explode("@@@",$value);
+    $uniq = array_count_values($array);
+    $string = "";
+    foreach($uniq as $key => $data) {
+      if($key != "") {
+        $string = $string."[".$data."] ".$key."<br>";
+      }
     }
+  //  $command = "host ".$address;
+  //  $result = exec($command);
+    echo "<li>".$address."<br>".$string."</li>";
   }
-//  $command = "host ".$address;
-//  $result = exec($command);
-  echo "<li>".$address."<br>".$string."</li>";
 }
 echo "</ul></div>";
 ?>
